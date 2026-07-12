@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Savings Goals | SmartFinance</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#14213d}
+.page{min-height:100vh;padding:38px;max-width:1450px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.label{font-size:12px;font-weight:800;letter-spacing:1.7px;color:#2563eb}.top h1{font-size:38px;margin:7px 0}.sub{color:#64748b;margin:0}
+.back{padding:12px 18px;background:white;border:1px solid #e2e8f0;border-radius:12px;text-decoration:none;color:#172033;font-weight:700}
+.layout{display:grid;grid-template-columns:380px 1fr;gap:26px}.card{background:white;border-radius:24px;box-shadow:0 12px 35px rgba(15,23,42,.07);border:1px solid #edf2f7}
+.create{padding:28px;height:max-content}.iconbox{width:62px;height:62px;border-radius:18px;background:linear-gradient(135deg,#dbeafe,#ede9fe);display:grid;place-items:center;font-size:30px}
+h2{margin:18px 0 6px}.muted{color:#64748b}label{display:block;font-size:13px;font-weight:800;margin:18px 0 8px}
+input{width:100%;padding:14px 15px;border:1px solid #dbe3ef;border-radius:12px;font-size:15px;outline:none}input:focus{border-color:#2563eb;box-shadow:0 0 0 4px #dbeafe}
+.money{position:relative}.money span{position:absolute;left:15px;top:14px;font-weight:800}.money input{padding-left:38px}
+.primary{width:100%;margin-top:20px;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;font-weight:800;font-size:15px;cursor:pointer}
+.content{min-width:0}.content-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.count{background:#eaf2ff;color:#2563eb;padding:8px 12px;border-radius:30px;font-weight:800;font-size:13px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:20px}.goal{padding:24px;position:relative;overflow:hidden}.goal:before{content:"";position:absolute;width:150px;height:150px;border-radius:50%;background:#eef4ff;right:-65px;top:-70px}
+.goal-top{display:flex;justify-content:space-between;gap:15px;position:relative}.status{font-size:11px;font-weight:900;letter-spacing:1px;color:#2563eb}.percent{font-size:25px;font-weight:900}
+.goal h2{font-size:24px;margin:9px 0 22px}.amounts{display:flex;justify-content:space-between;margin-bottom:9px}.amounts strong{font-size:18px}
+.track{height:12px;background:#e9eef6;border-radius:30px;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,#2563eb,#7c3aed);border-radius:30px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.stat{background:#f8fafc;padding:13px;border-radius:14px}.stat span{display:block;font-size:10px;color:#64748b;font-weight:800}.stat strong{display:block;margin-top:6px;font-size:14px}
+.contribute{background:#f8fafc;border-radius:16px;padding:16px}.contribute form{display:flex;gap:9px}.contribute input{margin:0}.contribute button,.delete{border:0;border-radius:10px;padding:11px 14px;color:white;font-weight:800;cursor:pointer}.contribute button{background:#172554;white-space:nowrap}.footer{display:flex;justify-content:space-between;align-items:center;margin-top:17px;font-size:12px;color:#94a3b8}.delete{background:#fff1f2;color:#be123c}
+.empty{padding:70px 25px;text-align:center;grid-column:1/-1}.empty-icon{width:90px;height:90px;margin:auto;border-radius:28px;background:linear-gradient(135deg,#dbeafe,#ede9fe);display:grid;place-items:center;font-size:43px}.empty h2{font-size:27px}
+.error{background:#fee2e2;color:#991b1b;padding:12px;border-radius:10px;margin-top:15px}
+@media(max-width:900px){.page{padding:20px}.layout{grid-template-columns:1fr}.top{align-items:flex-start;gap:15px}.top h1{font-size:30px}.goals{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="page">
+<header class="top"><div><span class="label">FINANCIAL PLANNING</span><h1>🏆 Savings Goals</h1><p class="sub">Turn financial ambitions into measurable progress.</p></div><a class="back" href="/dashboard">← Dashboard</a></header>
+<div class="layout">
+<aside class="card create"><div class="iconbox">🎯</div><h2>Create a New Goal</h2><p class="muted">Set a target and SmartFinance will calculate your monthly saving requirement.</p>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="POST"><label>GOAL NAME</label><input type="text" name="title" placeholder="e.g. Buy a Laptop" maxlength="60" required>
+<label>TARGET AMOUNT</label><div class="money"><span>₹</span><input type="number" name="target_amount" min="1" step="0.01" placeholder="80000" required></div>
+<label>TARGET DEADLINE</label><input type="date" name="deadline" required><button class="primary" type="submit">＋ Create Savings Goal</button></form></aside>
+<main class="content"><div class="content-head"><div><span class="label">GOAL PORTFOLIO</span><h2>Your Financial Goals</h2></div><span class="count">{{ goals|length }} ACTIVE</span></div>
+<div class="goals">
+{% for goal in goals %}
+<article class="card goal"><div class="goal-top"><div><span class="status">{% if goal["percentage"] >= 100 %}✓ COMPLETED{% elif goal["percentage"] >= 75 %}🔥 ALMOST THERE{% elif goal["percentage"] >= 25 %}📈 IN PROGRESS{% else %}🚀 JUST STARTED{% endif %}</span><h2>{{ goal["title"] }}</h2></div><div class="percent">{{ goal["percentage"] }}%</div></div>
+<div class="amounts"><span class="muted">Saved <strong>₹{{ "%.2f"|format(goal["saved_amount"]) }}</strong></span><span class="muted">Target <strong>₹{{ "%.2f"|format(goal["target_amount"]) }}</strong></span></div>
+<div class="track"><div class="fill" style="width:{{ goal['percentage'] }}%"></div></div>
+<div class="stats"><div class="stat"><span>REMAINING</span><strong>₹{{ "%.2f"|format(goal["remaining"]) }}</strong></div><div class="stat"><span>MONTHS LEFT</span><strong>{{ goal["months_remaining"] }}</strong></div><div class="stat"><span>NEEDED / MONTH</span><strong>₹{{ "%.2f"|format(goal["monthly_required"]) }}</strong></div></div>
+{% if goal["percentage"] < 100 %}<div class="contribute"><form method="POST" action="/goals/{{ goal['id'] }}/contribute"><input type="number" name="amount" min="1" step="0.01" placeholder="Add savings ₹" required><button type="submit">Add Savings</button></form></div>{% else %}<div class="contribute">🎉 Goal achieved. Excellent financial progress.</div>{% endif %}
+<div class="footer"><span>Deadline: {{ goal["deadline"] }}</span><form method="POST" action="/goals/{{ goal['id'] }}/delete" onsubmit="return confirm('Delete this savings goal?')"><button class="delete">Delete</button></form></div></article>
+{% else %}<div class="card empty"><div class="empty-icon">🏆</div><h2>Your first goal starts here</h2><p class="muted">Create a savings target to unlock visual progress tracking, monthly requirements and goal intelligence.</p></div>{% endfor %}
+</div></main></div></div></body></html>

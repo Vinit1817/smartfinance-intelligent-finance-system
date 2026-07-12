@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Expense | SmartFinance</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            Smart<span>Finance</span>
+        </div>
+
+        <div class="menu-title">OVERVIEW</div>
+
+        <a href="/dashboard">📊 Dashboard</a>
+        <a href="/notifications">🔔 Notifications</a>
+        <a href="/expenses">🔍 Search Expenses</a>
+
+        <div class="menu-title">FINANCE</div>
+
+        <a href="/income">💵 Monthly Income</a>
+        <a href="/budget">🎯 Monthly Budget</a>
+        <a href="/category-budgets">📂 Category Budgets</a>
+
+        <a href="/add-expense" class="active">
+            💳 Add Expense
+        </a>
+
+        <a href="/goals">🏆 Savings Goals</a>
+        <a href="/categories">✨ Custom Categories</a>
+
+        <div class="menu-title">ACCOUNT</div>
+
+        <a href="/profile">👤 Profile & Settings</a>
+
+        {% if is_admin %}
+        <a href="/admin">🛡️ Admin Dashboard</a>
+        {% endif %}
+
+        <button type="button"
+                class="theme-toggle"
+                data-theme-toggle>
+            🌙 Dark Mode
+        </button>
+
+        <a href="/logout" class="logout">
+            🚪 Logout
+        </a>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="premium-page-header">
+
+            <div>
+
+                <span class="dashboard-label">
+                    TRANSACTION MANAGEMENT
+                </span>
+
+                <h1>✏️ Edit Expense</h1>
+
+                <p>
+                    Update an existing financial transaction.
+                </p>
+
+            </div>
+
+            <a href="/dashboard"
+               class="action-btn">
+
+                ← Dashboard
+
+            </a>
+
+        </div>
+
+
+        <section class="premium-form-layout">
+
+            <div class="premium-form-card">
+
+                <div class="form-card-header">
+
+                    <div class="form-header-icon">
+                        ✏️
+                    </div>
+
+                    <div>
+
+                        <span class="chart-small-label">
+                            EXPENSE EDITOR
+                        </span>
+
+                        <h2>Transaction Details</h2>
+
+                        <p>
+                            Modify the expense information below.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                {% if error %}
+
+                <div class="form-alert danger-text">
+                    ⚠️ {{ error }}
+                </div>
+
+                {% endif %}
+
+
+                <form method="POST"
+                      class="premium-form">
+
+
+                    <div class="form-group">
+
+                        <label>Expense Amount</label>
+
+                        <div class="input-with-symbol">
+
+                            <span>₹</span>
+
+                            <input type="number"
+                                   name="amount"
+                                   min="0.01"
+                                   step="0.01"
+                                   value="{{ expense['amount'] }}"
+                                   placeholder="Enter expense amount"
+                                   required>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Expense Category</label>
+
+                        <select name="category"
+                                required>
+
+                            {% for category in categories %}
+
+                            <option value="{{ category['name'] }}"
+                                {% if category['name'] == expense['category'] %}
+                                selected
+                                {% endif %}>
+
+                                {{ category["name"] }}
+
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Transaction Date</label>
+
+                        <input type="date"
+                               name="date"
+                               value="{{ expense['date'] }}"
+                               required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Expense Note</label>
+
+                        <textarea name="note"
+                                  rows="4"
+                                  maxlength="250"
+                                  placeholder="Add a short note about this expense...">{{ expense['note'] or '' }}</textarea>
+
+                    </div>
+
+
+                    <div class="premium-form-actions">
+
+                        <button type="submit"
+                                class="premium-submit-btn">
+
+                            ✓ Save Changes
+
+                        </button>
+
+                        <a href="/dashboard"
+                           class="premium-cancel-btn">
+
+                            Cancel
+
+                        </a>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <div class="form-intelligence-card">
+
+                <span class="chart-small-label">
+                    SMARTFINANCE CONTROL
+                </span>
+
+                <h2>Transaction Editing</h2>
+
+                <p>
+                    Changes made to this expense automatically update
+                    your financial analytics.
+                </p>
+
+
+                <div class="form-feature-list">
+
+                    <div class="form-feature-item">
+
+                        <span>📊</span>
+
+                        <div>
+
+                            <strong>Analytics Update</strong>
+
+                            <p>
+                                Spending charts recalculate automatically.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-feature-item">
+
+                        <span>🎯</span>
+
+                        <div>
+
+                            <strong>Budget Monitoring</strong>
+
+                            <p>
+                                Budget usage is recalculated after editing.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-feature-item">
+
+                        <span>🔔</span>
+
+                        <div>
+
+                            <strong>Smart Alerts</strong>
+
+                            <p>
+                                Financial alerts react to updated spending.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-feature-item">
+
+                        <span>🧠</span>
+
+                        <div>
+
+                            <strong>Financial Intelligence</strong>
+
+                            <p>
+                                Your six-month analysis remains synchronized.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="intelligence-footer">
+
+                    <span>SMARTFINANCE ENGINE</span>
+
+                    <strong>SYNCHRONIZED</strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+
+</body>
+
+</html>

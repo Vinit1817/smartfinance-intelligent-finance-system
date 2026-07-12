@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Profile & Settings | SmartFinance</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            Smart<span>Finance</span>
+        </div>
+
+        <div class="menu-title">OVERVIEW</div>
+
+        <a href="/dashboard">📊 Dashboard</a>
+        <a href="/notifications">🔔 Notifications</a>
+        <a href="/expenses">🔍 Search Expenses</a>
+
+        <div class="menu-title">FINANCE</div>
+
+        <a href="/income">💵 Monthly Income</a>
+        <a href="/budget">🎯 Monthly Budget</a>
+        <a href="/category-budgets">📂 Category Budgets</a>
+        <a href="/add-expense">💳 Add Expense</a>
+        <a href="/goals">🏆 Savings Goals</a>
+        <a href="/categories">✨ Custom Categories</a>
+
+        <div class="menu-title">ACCOUNT</div>
+
+        <a href="/profile" class="active">
+            👤 Profile & Settings
+        </a>
+
+        {% if is_admin %}
+        <a href="/admin">🛡️ Admin Dashboard</a>
+        {% endif %}
+
+        <button
+            type="button"
+            class="theme-toggle"
+            data-theme-toggle>
+            🌙 Dark / Light Mode
+        </button>
+
+        <a href="/logout" class="logout">
+            🚪 Logout
+        </a>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="premium-page-header">
+
+            <div>
+
+                <span class="dashboard-label">
+                    ACCOUNT CONTROL CENTRE
+                </span>
+
+                <h1>👤 Profile & Settings</h1>
+
+                <p>
+                    Manage your SmartFinance identity and account preferences.
+                </p>
+
+            </div>
+
+            <a href="/dashboard"
+               class="action-btn">
+
+                ← Dashboard
+
+            </a>
+
+        </div>
+
+
+        {% if error %}
+
+        <div class="profile-message profile-error">
+            ⚠️ {{ error }}
+        </div>
+
+        {% endif %}
+
+
+        {% if success %}
+
+        <div class="profile-message profile-success">
+            ✓ {{ success }}
+        </div>
+
+        {% endif %}
+
+
+        <section class="profile-hero">
+
+            <div class="profile-avatar">
+
+                {{ user["name"][0]|upper }}
+
+            </div>
+
+
+            <div class="profile-identity">
+
+                <span class="chart-small-label">
+                    SMARTFINANCE MEMBER
+                </span>
+
+                <h2>
+                    {{ user["name"] }}
+                </h2>
+
+                <p>
+                    Personal financial intelligence account
+                </p>
+
+            </div>
+
+
+            <div class="profile-status">
+
+                <span>ACCOUNT STATUS</span>
+
+                <strong>ACTIVE</strong>
+
+                <p>
+                    SmartFinance services enabled
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <section class="profile-settings-grid">
+
+            <div class="premium-form-card">
+
+                <div class="form-card-header">
+
+                    <div class="form-header-icon">
+                        👤
+                    </div>
+
+                    <div>
+
+                        <span class="chart-small-label">
+                            IDENTITY SETTINGS
+                        </span>
+
+                        <h2>
+                            Update Username
+                        </h2>
+
+                        <p>
+                            Change the username used to access SmartFinance.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    method="POST"
+                    action="/profile/username"
+                    class="premium-form">
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Username
+                        </label>
+
+                        <input
+                            type="text"
+                            name="name"
+                            value="{{ user['name'] }}"
+                            minlength="3"
+                            maxlength="30"
+                            pattern="[A-Za-z0-9_]+"
+                            required>
+
+                        <small class="input-help">
+                            Letters, numbers and underscore only.
+                        </small>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="premium-submit-btn">
+
+                        ✓ Update Username
+
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <div class="premium-form-card">
+
+                <div class="form-card-header">
+
+                    <div class="form-header-icon">
+                        🔐
+                    </div>
+
+                    <div>
+
+                        <span class="chart-small-label">
+                            SECURITY SETTINGS
+                        </span>
+
+                        <h2>
+                            Change Password
+                        </h2>
+
+                        <p>
+                            Protect your financial account with a strong password.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    method="POST"
+                    action="/profile/password"
+                    class="premium-form">
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Current Password
+                        </label>
+
+                        <input
+                            type="password"
+                            name="current_password"
+                            placeholder="Enter current password"
+                            required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            New Password
+                        </label>
+
+                        <input
+                            type="password"
+                            name="new_password"
+                            minlength="8"
+                            placeholder="Create strong password"
+                            required>
+
+                        <small class="input-help">
+                            Minimum 8 characters with uppercase,
+                            lowercase and number.
+                        </small>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Confirm New Password
+                        </label>
+
+                        <input
+                            type="password"
+                            name="confirm_password"
+                            minlength="8"
+                            placeholder="Repeat new password"
+                            required>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="premium-submit-btn">
+
+                        🔐 Update Password
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <section class="account-intelligence-panel">
+
+            <div>
+
+                <span class="chart-small-label">
+                    ACCOUNT INTELLIGENCE
+                </span>
+
+                <h2>
+                    SmartFinance Account Protection
+                </h2>
+
+                <p>
+                    Your account powers personalized budgets,
+                    expense analytics and financial intelligence.
+                </p>
+
+            </div>
+
+
+            <div class="account-feature-grid">
+
+                <div class="account-feature-card">
+
+                    <span>🔐</span>
+
+                    <div>
+
+                        <strong>
+                            Secure Password Storage
+                        </strong>
+
+                        <p>
+                            Passwords are stored using secure hashing.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="account-feature-card">
+
+                    <span>👤</span>
+
+                    <div>
+
+                        <strong>
+                            Private Financial Profile
+                        </strong>
+
+                        <p>
+                            Financial records are linked to your user account.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="account-feature-card">
+
+                    <span>📊</span>
+
+                    <div>
+
+                        <strong>
+                            Personalized Intelligence
+                        </strong>
+
+                        <p>
+                            Analytics are calculated from your financial activity.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="account-feature-card">
+
+                    <span>🛡️</span>
+
+                    <div>
+
+                        <strong>
+                            Account Controls
+                        </strong>
+
+                        <p>
+                            Identity and security settings remain manageable.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="intelligence-footer">
+
+                <span>
+                    ACCOUNT ENGINE
+                </span>
+
+                <strong>
+                    PROTECTED
+                </strong>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+
+</body>
+
+</html>

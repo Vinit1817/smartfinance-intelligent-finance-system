@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SmartFinance | Financial Intelligence</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo">Smart<span>Finance</span></div>
+
+        <div class="menu-title">OVERVIEW</div>
+        <a href="/dashboard" class="active">📊 Dashboard</a>
+        <a href="/notifications">
+            🔔 Notifications
+            {% if unread_notifications > 0 %}
+            <span class="notification-badge">{{ unread_notifications }}</span>
+            {% endif %}
+        </a>
+        <a href="/expenses">🔍 Search Expenses</a>
+
+        <div class="menu-title">FINANCE</div>
+        <a href="/income">💵 Monthly Income</a>
+        <a href="/budget">🎯 Monthly Budget</a>
+        <a href="/category-budgets">📂 Category Budgets</a>
+        <a href="/add-expense">💳 Add Expense</a>
+        <a href="/goals">🏆 Savings Goals</a>
+        <a href="/recurring-expenses">🔁 Recurring Expenses</a>
+        <a href="/bill-reminders">🔔 Bill Reminders</a>
+        <a href="/forecast">📈 Financial Forecast</a>
+        <a href="/categories">✨ Custom Categories</a>
+
+        <div class="menu-title">ACCOUNT</div>
+        <a href="/profile">👤 Profile & Settings</a>
+
+        <button type="button" class="theme-toggle" data-theme-toggle>
+            🌙 Dark Mode
+        </button>
+
+        <a href="/logout" class="logout">🚪 Logout</a>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main-content">
+
+        <!-- TOP BAR -->
+
+        <div class="topbar">
+
+            <div class="welcome">
+
+                <span class="dashboard-label">
+                    FINANCIAL COMMAND CENTRE
+                </span>
+
+                <h1>
+                    Welcome back, {{ name }} 👋
+                </h1>
+
+                <p>
+                    Analyse, understand and improve your financial performance.
+                </p>
+
+            </div>
+
+
+            <form method="GET" action="/dashboard" class="month-form">
+
+                <select name="month_number" required>
+                    <option value="01" {% if selected_month_number == "01" %}selected{% endif %}>January</option>
+                    <option value="02" {% if selected_month_number == "02" %}selected{% endif %}>February</option>
+                    <option value="03" {% if selected_month_number == "03" %}selected{% endif %}>March</option>
+                    <option value="04" {% if selected_month_number == "04" %}selected{% endif %}>April</option>
+                    <option value="05" {% if selected_month_number == "05" %}selected{% endif %}>May</option>
+                    <option value="06" {% if selected_month_number == "06" %}selected{% endif %}>June</option>
+                    <option value="07" {% if selected_month_number == "07" %}selected{% endif %}>July</option>
+                    <option value="08" {% if selected_month_number == "08" %}selected{% endif %}>August</option>
+                    <option value="09" {% if selected_month_number == "09" %}selected{% endif %}>September</option>
+                    <option value="10" {% if selected_month_number == "10" %}selected{% endif %}>October</option>
+                    <option value="11" {% if selected_month_number == "11" %}selected{% endif %}>November</option>
+                    <option value="12" {% if selected_month_number == "12" %}selected{% endif %}>December</option>
+                </select>
+
+                <input
+                    type="number"
+                    name="year"
+                    value="{{ selected_year }}"
+                    min="1"
+                    max="9999"
+                    placeholder="Enter year"
+                    required
+                >
+
+                <button type="submit">
+                    View
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- BALANCE HERO -->
+
+        <section class="balance-hero">
+
+            <div>
+
+                <p class="balance-label">
+                    AVAILABLE BALANCE
+                </p>
+
+                <h1 class="balance-amount">
+                    ₹{{ "%.2f"|format(available_balance) }}
+                </h1>
+
+                <p class="balance-text">
+                    Monthly income after recorded expenses
+                </p>
+
+            </div>
+
+            <div class="hero-status">
+
+                <span>MONTHLY SAVINGS RATE</span>
+
+                <strong>
+                    {{ savings_rate }}%
+                </strong>
+
+                <p>
+                    Financial performance for {{ selected_month }}
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- STATS -->
+
+        <section class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-icon">💵</div>
+
+                <p>Monthly Income</p>
+
+                <h2>
+                    ₹{{ "%.2f"|format(income) }}
+                </h2>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">💳</div>
+
+                <p>Total Spent</p>
+
+                <h2>
+                    ₹{{ "%.2f"|format(expenses) }}
+                </h2>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">🎯</div>
+
+                <p>Remaining Budget</p>
+
+                <h2>
+                    ₹{{ "%.2f"|format(remaining_budget) }}
+                </h2>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">📈</div>
+
+                <p>Savings Rate</p>
+
+                <h2>
+                    {{ savings_rate }}%
+                </h2>
+
+            </div>
+
+        </section>
+
+
+        <!-- ACTIONS -->
+
+        <div class="action-buttons">
+
+            <a href="/add-expense"
+               class="action-btn primary">
+                + Add Expense
+            </a>
+
+            <a href="/income"
+               class="action-btn">
+                Set Income
+            </a>
+
+            <a href="/budget"
+               class="action-btn">
+                Set Budget
+            </a>
+
+            <a href="/category-budgets?month={{ selected_month }}"
+               class="action-btn">
+                Category Budgets
+            </a>
+
+            <a href="/goals"
+               class="action-btn">
+                Savings Goals
+            </a>
+
+        </div>
+
+
+        <!-- FINANCIAL HEALTH -->
+
+        <section class="health-section">
+
+            <div class="health-score-card">
+
+                <div class="health-score-left">
+
+                    <span class="health-label">
+                        FINANCIAL HEALTH SCORE
+                    </span>
+
+                    <h2>
+                        Financial Wellness
+                    </h2>
+
+                    <p>
+                        Real-time financial scoring based on savings,
+                        budget discipline, spending control and goal progress.
+                    </p>
+
+
+                    <div class="health-message">
+
+                        <strong>
+                            {{ health_status }}
+                        </strong>
+
+                        <span>
+                            {{ health_message }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="score-circle"
+                     style="--score: {{ health_score }}">
+
+                    <div class="score-circle-inner">
+
+                        <strong>
+                            {{ health_score }}
+                        </strong>
+
+                        <span>
+                            / 100
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="health-breakdown">
+
+                <div class="breakdown-header">
+
+                    <span>HEALTH COMPONENTS</span>
+
+                    <strong>
+                        {{ health_score }} POINTS
+                    </strong>
+
+                </div>
+
+
+                <div class="health-metric">
+
+                    <div class="metric-top">
+
+                        <span>
+                            💰 Savings Performance
+                        </span>
+
+                        <strong>
+                            {{ savings_score }}/40
+                        </strong>
+
+                    </div>
+
+                    <div class="metric-progress">
+
+                        <div style="width: {{ (savings_score / 40) * 100 }}%">
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="health-metric">
+
+                    <div class="metric-top">
+
+                        <span>
+                            🎯 Budget Discipline
+                        </span>
+
+                        <strong>
+                            {{ budget_score }}/30
+                        </strong>
+
+                    </div>
+
+                    <div class="metric-progress">
+
+                        <div style="width: {{ (budget_score / 30) * 100 }}%">
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="health-metric">
+
+                    <div class="metric-top">
+
+                        <span>
+                            💳 Spending Control
+                        </span>
+
+                        <strong>
+                            {{ spending_score }}/20
+                        </strong>
+
+                    </div>
+
+                    <div class="metric-progress">
+
+                        <div style="width: {{ (spending_score / 20) * 100 }}%">
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="health-metric">
+
+                    <div class="metric-top">
+
+                        <span>
+                            🏆 Goal Progress
+                        </span>
+
+                        <strong>
+                            {{ goal_score }}/10
+                        </strong>
+
+                    </div>
+
+                    <div class="metric-progress">
+
+                        <div style="width: {{ (goal_score / 10) * 100 }}%">
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             FINANCIAL INTELLIGENCE
+        =================================================== -->
+
+        <section class="intelligence-section">
+
+            <div class="intelligence-heading">
+
+                <div>
+
+                    <span class="intelligence-label">
+                        SMART ANALYTICS
+                    </span>
+
+                    <h2>
+                        6-Month Financial Intelligence
+                    </h2>
+
+                    <p>
+                        Understand spending behaviour and monthly financial trends.
+                    </p>
+
+                </div>
+
+
+                <div class="intelligence-badge">
+                    ✦ LIVE ANALYSIS
+                </div>
+
+            </div>
+
+
+            <!-- TREND KPI CARDS -->
+
+            <div class="trend-card-grid">
+
+
+                <div class="trend-card">
+
+                    <div class="trend-card-icon">
+                        📉
+                    </div>
+
+                    <span class="trend-card-label">
+                        MONTH VS LAST MONTH
+                    </span>
+
+
+                    {% if spending_change_status == "down" %}
+
+                    <h3 class="trend-positive">
+                        ↓ {{ spending_change|abs }}%
+                    </h3>
+
+                    <p>
+                        Spending decreased
+                    </p>
+
+
+                    {% elif spending_change_status == "up" %}
+
+                    <h3 class="trend-negative">
+                        ↑ {{ spending_change }}%
+                    </h3>
+
+                    <p>
+                        Spending increased
+                    </p>
+
+
+                    {% elif spending_change_status == "new" %}
+
+                    <h3>
+                        New Data
+                    </h3>
+
+                    <p>
+                        No previous comparison
+                    </p>
+
+
+                    {% else %}
+
+                    <h3>
+                        0%
+                    </h3>
+
+                    <p>
+                        Spending remained stable
+                    </p>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="trend-card">
+
+                    <div class="trend-card-icon">
+                        📊
+                    </div>
+
+                    <span class="trend-card-label">
+                        AVG. MONTHLY SPENDING
+                    </span>
+
+                    <h3>
+                        ₹{{ "%.2f"|format(average_monthly_spending) }}
+                    </h3>
+
+                    <p>
+                        Six-month average
+                    </p>
+
+                </div>
+
+
+                <div class="trend-card">
+
+                    <div class="trend-card-icon">
+                        🏅
+                    </div>
+
+                    <span class="trend-card-label">
+                        BEST SPENDING MONTH
+                    </span>
+
+                    <h3>
+                        {{ best_spending_month }}
+                    </h3>
+
+                    <p>
+                        Lowest recorded spending
+                    </p>
+
+                </div>
+
+
+                <div class="trend-card">
+
+                    <div class="trend-card-icon">
+                        🔥
+                    </div>
+
+                    <span class="trend-card-label">
+                        HIGHEST SPENDING MONTH
+                    </span>
+
+                    <h3>
+                        {{ highest_spending_month }}
+                    </h3>
+
+                    <p>
+                        Highest recorded expenses
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- MAIN INTELLIGENCE GRID -->
+
+            <div class="financial-intelligence-grid">
+
+
+                <!-- LINE CHART -->
+
+                <div class="intelligence-chart-card">
+
+                    <div class="chart-card-header">
+
+                        <div>
+
+                            <span class="chart-small-label">
+                                PERFORMANCE TREND
+                            </span>
+
+                            <h3>
+                                Income, Expenses & Savings
+                            </h3>
+
+                        </div>
+
+
+                        <div class="chart-legend">
+
+                            <span>
+                                <i class="legend-income"></i>
+                                Income
+                            </span>
+
+                            <span>
+                                <i class="legend-expense"></i>
+                                Expenses
+                            </span>
+
+                            <span>
+                                <i class="legend-saving"></i>
+                                Savings
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="financial-chart-container">
+
+                        <canvas id="financialTrendChart">
+                        </canvas>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TREND INTELLIGENCE -->
+
+                <div class="trend-intelligence-card">
+
+                    <span class="chart-small-label">
+                        SMART TREND ANALYSIS
+                    </span>
+
+                    <h3>
+                        Financial Signals
+                    </h3>
+
+
+                    <div class="savings-trend-status">
+
+                        <span>
+                            SAVINGS TREND
+                        </span>
+
+                        {% if savings_trend == "Improving" %}
+
+                        <strong class="trend-positive">
+                            ↑ Improving
+                        </strong>
+
+                        {% elif savings_trend == "Declining" %}
+
+                        <strong class="trend-negative">
+                            ↓ Declining
+                        </strong>
+
+                        {% else %}
+
+                        <strong>
+                            → Stable
+                        </strong>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="trend-insight-list">
+
+                        {% for insight in trend_insights %}
+
+                        <div class="trend-insight-item">
+
+                            <div class="trend-signal-icon">
+                                ✦
+                            </div>
+
+                            <p>
+                                {{ insight }}
+                            </p>
+
+                        </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="intelligence-footer">
+
+                        <span>
+                            SMARTFINANCE ENGINE
+                        </span>
+
+                        <strong>
+                            ANALYSIS ACTIVE
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- MONTHLY BUDGET -->
+
+        <section class="panel">
+
+            <div class="budget-header">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        MONTHLY CONTROL
+                    </span>
+
+                    <h2 class="panel-title budget-panel-title">
+                        Budget Usage
+                    </h2>
+
+                </div>
+
+
+                <strong>
+                    {{ budget_percentage }}%
+                </strong>
+
+            </div>
+
+
+            <div class="budget-amount-row">
+
+                <span>
+                    ₹{{ "%.2f"|format(expenses) }} spent
+                </span>
+
+                <span>
+                    ₹{{ "%.2f"|format(monthly_budget) }} budget
+                </span>
+
+            </div>
+
+
+            <div class="progress">
+
+                <div
+                    class="progress-bar"
+                    style="width: {{ [budget_percentage, 100]|min }}%">
+                </div>
+
+            </div>
+
+
+            <p class="muted-text">
+
+                {% if budget_percentage > 100 %}
+
+                Monthly budget exceeded by
+                {{ "%.1f"|format(budget_percentage - 100) }}%.
+
+                {% elif monthly_budget > 0 %}
+
+                {{ budget_percentage }}% of your monthly budget has been used.
+
+                {% else %}
+
+                No monthly budget configured.
+
+                {% endif %}
+
+            </p>
+
+        </section>
+
+
+        <!-- SAVINGS GOALS -->
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        FINANCIAL TARGETS
+                    </span>
+
+                    <h2>
+                        🏆 Savings Goals
+                    </h2>
+
+                    <p>
+                        Track progress towards your financial ambitions.
+                    </p>
+
+                </div>
+
+
+                <a href="/goals"
+                   class="section-link">
+
+                    Manage Goals →
+
+                </a>
+
+            </div>
+
+
+            <div class="goal-preview-grid">
+
+                {% for goal in dashboard_goals %}
+
+                <div class="goal-preview-card">
+
+                    <div class="goal-preview-top">
+
+                        <h3>
+                            {{ goal["title"] }}
+                        </h3>
+
+                        <span class="goal-badge">
+                            {{ goal["percentage"] }}%
+                        </span>
+
+                    </div>
+
+
+                    <h2 class="goal-preview-amount">
+
+                        ₹{{ "%.2f"|format(goal["saved_amount"]) }}
+
+                        <span>
+                            / ₹{{ "%.2f"|format(goal["target_amount"]) }}
+                        </span>
+
+                    </h2>
+
+
+                    <div class="progress">
+
+                        <div
+                            class="progress-bar"
+                            style="width: {{ goal['percentage'] }}%">
+                        </div>
+
+                    </div>
+
+
+                    <p class="muted-text">
+
+                        ₹{{ "%.2f"|format(goal["remaining"]) }}
+                        remaining
+
+                    </p>
+
+                </div>
+
+
+                {% else %}
+
+                <div class="empty-dashboard-card">
+
+                    <div class="empty-icon">
+                        🎯
+                    </div>
+
+                    <h3>
+                        No savings goals yet
+                    </h3>
+
+                    <p>
+                        Create your first financial target.
+                    </p>
+
+                    <a href="/goals">
+                        Create Goal
+                    </a>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+
+        <!-- CATEGORY BUDGET -->
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        SPENDING LIMITS
+                    </span>
+
+                    <h2>
+                        🎯 Category Budget Control
+                    </h2>
+
+                    <p>
+                        Monitor category-level spending performance.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="/category-budgets?month={{ selected_month }}"
+                    class="section-link">
+
+                    Manage Budgets →
+
+                </a>
+
+            </div>
+
+
+            <div class="category-budget-grid">
+
+                {% for category in category_budgets %}
+
+                <div class="category-budget-card">
+
+                    <div class="budget-header">
+
+                        <strong>
+                            {{ category["category"] }}
+                        </strong>
+
+                        <span class="category-percentage">
+                            {{ category["percentage"] }}%
+                        </span>
+
+                    </div>
+
+
+                    <div class="progress">
+
+                        <div
+                            class="progress-bar"
+                            style="width: {{ [category['percentage'], 100]|min }}%">
+                        </div>
+
+                    </div>
+
+
+                    <p class="muted-text">
+
+                        ₹{{ "%.2f"|format(category["spent"]) }}
+                        spent of
+                        ₹{{ "%.2f"|format(category["budget"]) }}
+
+                    </p>
+
+
+                    {% if category["percentage"] >= 100 %}
+
+                    <p class="danger-text">
+                        🚨 Budget exceeded
+                    </p>
+
+
+                    {% elif category["percentage"] >= 80 %}
+
+                    <p class="warning-text">
+                        ⚠️ Close to budget limit
+                    </p>
+
+
+                    {% else %}
+
+                    <p class="success-text">
+
+                        ✓ ₹{{ "%.2f"|format(category["remaining"]) }}
+                        remaining
+
+                    </p>
+
+                    {% endif %}
+
+                </div>
+
+
+                {% else %}
+
+                <div class="empty-dashboard-card">
+
+                    <div class="empty-icon">
+                        📂
+                    </div>
+
+                    <h3>
+                        No category budgets configured
+                    </h3>
+
+                    <p>
+                        Create category spending limits.
+                    </p>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+
+        <!-- ANALYTICS -->
+
+        <section class="analytics-grid">
+
+            <div class="panel">
+
+                <span class="chart-small-label">
+                    CATEGORY ANALYSIS
+                </span>
+
+                <h2 class="panel-title">
+                    Spending Distribution
+                </h2>
+
+
+                {% if chart_values %}
+
+                <div class="chart-container">
+
+                    <canvas id="expenseChart">
+                    </canvas>
+
+                </div>
+
+
+                {% else %}
+
+                <div class="chart-empty">
+
+                    <h3>
+                        No spending data
+                    </h3>
+
+                    <p>
+                        Add expenses to unlock analytics.
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="panel">
+
+                <span class="chart-small-label">
+                    INTELLIGENT SIGNALS
+                </span>
+
+                <h2 class="panel-title">
+                    ✨ Smart Financial Insights
+                </h2>
+
+
+                {% for insight in insights %}
+
+                <div class="insight-item">
+
+                    <span class="insight-icon">
+                        💡
+                    </span>
+
+                    <div>
+                        {{ insight }}
+                    </div>
+
+                </div>
+
+
+                {% else %}
+
+                <div class="insight-item">
+
+                    <span class="insight-icon">
+                        📊
+                    </span>
+
+                    <div>
+                        Add financial data to receive smart insights.
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+
+        <!-- EXPENSE HISTORY -->
+
+        <section class="transactions panel">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        TRANSACTION ACTIVITY
+                    </span>
+
+                    <h2>
+                        Recent Expenses
+                    </h2>
+
+                    <p>
+                        Expenses recorded for {{ selected_month }}.
+                    </p>
+
+                </div>
+
+
+                <a href="/add-expense"
+                   class="section-link">
+
+                    + Add Expense
+
+                </a>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+                        <th>EXPENSE</th>
+                        <th>CATEGORY</th>
+                        <th>DATE</th>
+                        <th>NOTE</th>
+                        <th>ACTION</th>
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    {% for transaction in transactions %}
+
+                    <tr>
+
+                        <td>
+
+                            <strong class="expense-amount">
+                                ₹{{ "%.2f"|format(transaction["amount"]) }}
+                            </strong>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="category-badge">
+                                {{ transaction["category"] }}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+                            {{ transaction["date"] }}
+                        </td>
+
+
+                        <td>
+                            {{ transaction["note"] or "-" }}
+                        </td>
+
+
+                        <td>
+
+                            <a
+                                href="/delete/{{ transaction['id'] }}"
+                                class="delete-btn"
+                                onclick="return confirm('Delete this expense?')">
+
+                                Delete
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+
+                    {% else %}
+
+                    <tr>
+
+                        <td colspan="5"
+                            class="empty-table">
+
+                            No expenses recorded this month.
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- ==================================================
+     CHART JAVASCRIPT
+=================================================== -->
+
+<script>
+
+const sixMonthLabels =
+    {{ six_month_labels | tojson }};
+
+const sixMonthIncome =
+    {{ six_month_income | tojson }};
+
+const sixMonthExpenses =
+    {{ six_month_expenses | tojson }};
+
+const sixMonthSavings =
+    {{ six_month_savings | tojson }};
+
+
+const trendCanvas =
+    document.getElementById("financialTrendChart");
+
+
+if (trendCanvas) {
+
+    const trendContext =
+        trendCanvas.getContext("2d");
+
+
+    const incomeGradient =
+        trendContext.createLinearGradient(
+            0,
+            0,
+            0,
+            320
+        );
+
+    incomeGradient.addColorStop(
+        0,
+        "rgba(99, 102, 241, 0.35)"
+    );
+
+    incomeGradient.addColorStop(
+        1,
+        "rgba(99, 102, 241, 0)"
+    );
+
+
+    new Chart(
+        trendCanvas,
+        {
+            type: "line",
+
+            data: {
+
+                labels: sixMonthLabels,
+
+                datasets: [
+
+                    {
+                        label: "Income",
+
+                        data: sixMonthIncome,
+
+                        borderColor: "#6366f1",
+
+                        backgroundColor:
+                            incomeGradient,
+
+                        borderWidth: 3,
+
+                        fill: true,
+
+                        tension: 0.4,
+
+                        pointRadius: 4,
+
+                        pointHoverRadius: 7
+                    },
+
+                    {
+                        label: "Expenses",
+
+                        data: sixMonthExpenses,
+
+                        borderColor: "#ef4444",
+
+                        borderWidth: 3,
+
+                        fill: false,
+
+                        tension: 0.4,
+
+                        pointRadius: 4,
+
+                        pointHoverRadius: 7
+                    },
+
+                    {
+                        label: "Savings",
+
+                        data: sixMonthSavings,
+
+                        borderColor: "#10b981",
+
+                        borderWidth: 3,
+
+                        fill: false,
+
+                        tension: 0.4,
+
+                        pointRadius: 4,
+
+                        pointHoverRadius: 7
+                    }
+
+                ]
+
+            },
+
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                interaction: {
+                    intersect: false,
+                    mode: "index"
+                },
+
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    },
+
+
+                    tooltip: {
+
+                        backgroundColor: "#0f172a",
+
+                        padding: 14,
+
+                        cornerRadius: 10,
+
+                        callbacks: {
+
+                            label: function(context) {
+
+                                return (
+                                    context.dataset.label
+                                    + ": ₹"
+                                    + context.raw.toLocaleString(
+                                        "en-IN"
+                                    )
+                                );
+
+                            }
+
+                        }
+
+                    }
+
+                },
+
+
+                scales: {
+
+                    x: {
+
+                        grid: {
+                            display: false
+                        },
+
+                        border: {
+                            display: false
+                        }
+
+                    },
+
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        border: {
+                            display: false
+                        },
+
+                        grid: {
+
+                            color:
+                                "rgba(148, 163, 184, 0.15)"
+
+                        },
+
+
+                        ticks: {
+
+                            callback: function(value) {
+
+                                return (
+                                    "₹"
+                                    + value.toLocaleString(
+                                        "en-IN"
+                                    )
+                                );
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+const categoryLabels =
+    {{ chart_labels | tojson }};
+
+const categoryValues =
+    {{ chart_values | tojson }};
+
+
+const expenseCanvas =
+    document.getElementById("expenseChart");
+
+
+if (
+    expenseCanvas
+    && categoryValues.length > 0
+) {
+
+    new Chart(
+        expenseCanvas,
+        {
+
+            type: "doughnut",
+
+
+            data: {
+
+                labels: categoryLabels,
+
+                datasets: [
+
+                    {
+
+                        data: categoryValues,
+
+                        backgroundColor: [
+
+                            "#6366f1",
+                            "#8b5cf6",
+                            "#06b6d4",
+                            "#10b981",
+                            "#f59e0b",
+                            "#ef4444",
+                            "#ec4899",
+                            "#64748b"
+
+                        ],
+
+                        borderWidth: 0,
+
+                        hoverOffset: 10
+
+                    }
+
+                ]
+
+            },
+
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                cutout: "72%",
+
+
+                plugins: {
+
+                    legend: {
+
+                        position: "bottom",
+
+                        labels: {
+
+                            usePointStyle: true,
+
+                            padding: 20
+
+                        }
+
+                    },
+
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function(context) {
+
+                                return (
+                                    context.label
+                                    + ": ₹"
+                                    + context.raw.toLocaleString(
+                                        "en-IN"
+                                    )
+                                );
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+</script>
+
+</body>
+
+</html>

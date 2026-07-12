@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Control Centre | SmartFinance</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            Smart<span>Finance</span>
+        </div>
+
+        <div class="menu-title">OVERVIEW</div>
+
+        <a href="/dashboard">📊 Dashboard</a>
+        <a href="/notifications">🔔 Notifications</a>
+        <a href="/expenses">🔍 Search Expenses</a>
+
+        <div class="menu-title">FINANCE</div>
+
+        <a href="/income">💵 Monthly Income</a>
+        <a href="/budget">🎯 Monthly Budget</a>
+        <a href="/category-budgets">📂 Category Budgets</a>
+        <a href="/add-expense">💳 Add Expense</a>
+        <a href="/goals">🏆 Savings Goals</a>
+        <a href="/categories">✨ Custom Categories</a>
+
+        <div class="menu-title">ACCOUNT</div>
+
+        <a href="/profile">👤 Profile & Settings</a>
+
+        <a href="/admin" class="active">
+            🛡️ Admin Dashboard
+        </a>
+
+        <button type="button"
+                class="theme-toggle"
+                data-theme-toggle>
+            🌙 Dark Mode
+        </button>
+
+        <a href="/logout" class="logout">
+            🚪 Logout
+        </a>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="premium-page-header">
+
+            <div>
+
+                <span class="dashboard-label">
+                    SYSTEM ADMINISTRATION
+                </span>
+
+                <h1>🛡️ Admin Control Centre</h1>
+
+                <p>
+                    Monitor SmartFinance users, transactions
+                    and platform activity.
+                </p>
+
+            </div>
+
+            <div class="admin-live-badge">
+                SYSTEM LIVE
+            </div>
+
+        </div>
+
+
+        <section class="admin-stats-grid">
+
+            <div class="admin-stat-card">
+
+                <div class="admin-stat-icon">
+                    👥
+                </div>
+
+                <div>
+
+                    <span>TOTAL USERS</span>
+
+                    <strong>
+                        {{ total_users }}
+                    </strong>
+
+                    <p>Registered accounts</p>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-stat-card">
+
+                <div class="admin-stat-icon">
+                    💳
+                </div>
+
+                <div>
+
+                    <span>TRANSACTIONS</span>
+
+                    <strong>
+                        {{ total_transactions }}
+                    </strong>
+
+                    <p>Platform expense records</p>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-stat-card">
+
+                <div class="admin-stat-icon">
+                    ₹
+                </div>
+
+                <div>
+
+                    <span>TOTAL EXPENSE VOLUME</span>
+
+                    <strong>
+                        ₹{{ "%.2f"|format(total_expense_volume) }}
+                    </strong>
+
+                    <p>Tracked spending volume</p>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-stat-card">
+
+                <div class="admin-stat-icon">
+                    🎯
+                </div>
+
+                <div>
+
+                    <span>SAVINGS GOALS</span>
+
+                    <strong>
+                        {{ total_goals }}
+                    </strong>
+
+                    <p>Financial goals created</p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="admin-system-panel">
+
+            <div class="admin-system-heading">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        PLATFORM INTELLIGENCE
+                    </span>
+
+                    <h2>
+                        SmartFinance System Overview
+                    </h2>
+
+                    <p>
+                        Operational overview of the finance platform.
+                    </p>
+
+                </div>
+
+                <div class="admin-engine-status">
+
+                    <span>ADMIN ENGINE</span>
+
+                    <strong>ACTIVE</strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-health-grid">
+
+                <div class="admin-health-item">
+
+                    <span class="admin-health-icon">
+                        🟢
+                    </span>
+
+                    <div>
+
+                        <strong>Database System</strong>
+
+                        <p>
+                            SQLite financial database operational
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admin-health-item">
+
+                    <span class="admin-health-icon">
+                        🔔
+                    </span>
+
+                    <div>
+
+                        <strong>Notification Engine</strong>
+
+                        <p>
+                            Smart budget alerts enabled
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admin-health-item">
+
+                    <span class="admin-health-icon">
+                        📊
+                    </span>
+
+                    <div>
+
+                        <strong>Analytics Engine</strong>
+
+                        <p>
+                            Financial intelligence processing active
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admin-health-item">
+
+                    <span class="admin-health-icon">
+                        🔐
+                    </span>
+
+                    <div>
+
+                        <strong>Authentication</strong>
+
+                        <p>
+                            Password hashing and session access enabled
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="admin-users-panel">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        USER MANAGEMENT
+                    </span>
+
+                    <h2>Registered Users</h2>
+
+                    <p>
+                        Review accounts and administrator access.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>USER</th>
+                        <th>ROLE</th>
+                        <th>JOINED</th>
+                        <th>EXPENSES</th>
+                        <th>TRANSACTIONS</th>
+                        <th>CONTROL</th>
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    {% for user in users %}
+
+                    <tr>
+
+                        <td>
+                            #{{ user["id"] }}
+                        </td>
+
+
+                        <td>
+
+                            <div class="admin-user-cell">
+
+                                <div class="admin-user-avatar">
+                                    {{ user["name"][0]|upper }}
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        {{ user["name"] }}
+                                    </strong>
+
+                                    <span>
+                                        SmartFinance User
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+
+                            {% if user["is_admin"] == 1 %}
+
+                            <span class="admin-role-badge">
+                                🛡️ ADMIN
+                            </span>
+
+                            {% else %}
+
+                            <span class="user-role-badge">
+                                USER
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+                            {{ user["created_at"] or "-" }}
+                        </td>
+
+
+                        <td>
+
+                            <strong class="expense-amount">
+                                ₹{{ "%.2f"|format(user["total_expenses"]) }}
+                            </strong>
+
+                        </td>
+
+
+                        <td>
+                            {{ user["transaction_count"] }}
+                        </td>
+
+
+                        <td>
+
+                            {% if user["id"] != session["user_id"] %}
+
+                            <form method="POST"
+                                  action="/admin/user/{{ user['id'] }}/role"
+                                  class="admin-role-form">
+
+                                <select name="role">
+
+                                    <option value="user"
+                                        {% if user["is_admin"] == 0 %}
+                                        selected
+                                        {% endif %}>
+                                        User
+                                    </option>
+
+                                    <option value="admin"
+                                        {% if user["is_admin"] == 1 %}
+                                        selected
+                                        {% endif %}>
+                                        Admin
+                                    </option>
+
+                                </select>
+
+                                <button type="submit"
+                                        class="admin-update-btn">
+                                    Update
+                                </button>
+
+                            </form>
+
+                            {% else %}
+
+                            <span class="current-admin-badge">
+                                CURRENT ACCOUNT
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+
+                    {% else %}
+
+                    <tr>
+
+                        <td colspan="7"
+                            class="empty-table">
+
+                            No SmartFinance users available.
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <section class="admin-security-banner">
+
+            <div class="admin-security-icon">
+                🛡️
+            </div>
+
+            <div>
+
+                <span class="chart-small-label">
+                    PRIVILEGED ACCESS
+                </span>
+
+                <h2>
+                    Administrator Security Zone
+                </h2>
+
+                <p>
+                    This dashboard is restricted to administrator accounts.
+                </p>
+
+            </div>
+
+            <strong>
+                ACCESS GRANTED
+            </strong>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+
+</body>
+
+</html>

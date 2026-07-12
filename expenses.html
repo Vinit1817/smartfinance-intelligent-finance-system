@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Expense Explorer | SmartFinance</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            Smart<span>Finance</span>
+        </div>
+
+        <div class="menu-title">OVERVIEW</div>
+
+        <a href="/dashboard">📊 Dashboard</a>
+        <a href="/notifications">🔔 Notifications</a>
+
+        <a href="/expenses" class="active">
+            🔍 Search Expenses
+        </a>
+
+        <div class="menu-title">FINANCE</div>
+
+        <a href="/income">💵 Monthly Income</a>
+        <a href="/budget">🎯 Monthly Budget</a>
+        <a href="/category-budgets">📂 Category Budgets</a>
+        <a href="/add-expense">💳 Add Expense</a>
+        <a href="/goals">🏆 Savings Goals</a>
+        <a href="/categories">✨ Custom Categories</a>
+
+        <div class="menu-title">ACCOUNT</div>
+
+        <a href="/profile">👤 Profile & Settings</a>
+
+        {% if is_admin %}
+        <a href="/admin">🛡️ Admin Dashboard</a>
+        {% endif %}
+
+        <button
+            type="button"
+            class="theme-toggle"
+            data-theme-toggle>
+            🌙 Dark / Light Mode
+        </button>
+
+        <a href="/logout" class="logout">
+            🚪 Logout
+        </a>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="premium-page-header">
+
+            <div>
+
+                <span class="dashboard-label">
+                    TRANSACTION INTELLIGENCE
+                </span>
+
+                <h1>🔍 Expense Explorer</h1>
+
+                <p>
+                    Search, filter and analyse your complete transaction history.
+                </p>
+
+            </div>
+
+            <a href="/add-expense"
+               class="action-btn primary">
+
+                + Add Expense
+
+            </a>
+
+        </div>
+
+
+        <section class="expense-explorer-summary">
+
+            <div class="explorer-summary-card">
+
+                <span>RESULTS FOUND</span>
+
+                <strong>
+                    {{ expenses|length }}
+                </strong>
+
+                <p>
+                    Matching transactions
+                </p>
+
+            </div>
+
+
+            <div class="explorer-summary-card">
+
+                <span>FILTER ENGINE</span>
+
+                <strong>ACTIVE</strong>
+
+                <p>
+                    Multi-condition search
+                </p>
+
+            </div>
+
+
+            <div class="explorer-summary-card">
+
+                <span>TRANSACTION DATA</span>
+
+                <strong>LIVE</strong>
+
+                <p>
+                    Synced with dashboard
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <section class="expense-filter-card">
+
+            <div class="filter-card-heading">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        ADVANCED FILTER
+                    </span>
+
+                    <h2>
+                        Find Transactions
+                    </h2>
+
+                    <p>
+                        Combine filters to locate specific expenses.
+                    </p>
+
+                </div>
+
+                <a href="/expenses"
+                   class="filter-reset-btn">
+
+                    Reset Filters
+
+                </a>
+
+            </div>
+
+
+            <form method="GET"
+                  class="expense-filter-form">
+
+
+                <div class="form-group">
+
+                    <label>
+                        Search Note
+                    </label>
+
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ filters['search'] }}"
+                        placeholder="Pizza, laptop, college...">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Category
+                    </label>
+
+                    <select name="category">
+
+                        <option value="">
+                            All Categories
+                        </option>
+
+                        {% for category in categories %}
+
+                        <option
+                            value="{{ category['name'] }}"
+
+                            {% if filters['category'] == category['name'] %}
+                            selected
+                            {% endif %}>
+
+                            {{ category["name"] }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        From Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="from_date"
+                        value="{{ filters['from_date'] }}">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        To Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="to_date"
+                        value="{{ filters['to_date'] }}">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Minimum Amount
+                    </label>
+
+                    <input
+                        type="number"
+                        name="min_amount"
+                        min="0"
+                        step="0.01"
+                        value="{{ filters['min_amount'] }}"
+                        placeholder="₹0">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Maximum Amount
+                    </label>
+
+                    <input
+                        type="number"
+                        name="max_amount"
+                        min="0"
+                        step="0.01"
+                        value="{{ filters['max_amount'] }}"
+                        placeholder="₹10000">
+
+                </div>
+
+
+                <div class="filter-submit-wrapper">
+
+                    <button
+                        type="submit"
+                        class="premium-submit-btn">
+
+                        🔍 Search Expenses
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <section class="transactions panel">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        SEARCH RESULTS
+                    </span>
+
+                    <h2>
+                        Transaction Results
+                    </h2>
+
+                    <p>
+                        Expenses matching your selected filters.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+                        <th>EXPENSE</th>
+                        <th>CATEGORY</th>
+                        <th>DATE</th>
+                        <th>NOTE</th>
+                        <th>ACTION</th>
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    {% for expense in expenses %}
+
+                    <tr>
+
+                        <td>
+
+                            <strong class="expense-amount">
+
+                                ₹{{ "%.2f"|format(expense["amount"]) }}
+
+                            </strong>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="category-badge">
+
+                                {{ expense["category"] }}
+
+                            </span>
+
+                        </td>
+
+
+                        <td>
+                            {{ expense["date"] }}
+                        </td>
+
+
+                        <td>
+                            {{ expense["note"] or "-" }}
+                        </td>
+
+
+                        <td>
+
+                            <a
+                                href="/expense/{{ expense['id'] }}/edit"
+                                class="edit-btn">
+
+                                Edit
+
+                            </a>
+
+                            <a
+                                href="/delete/{{ expense['id'] }}"
+                                class="delete-btn"
+                                onclick="return confirm('Delete this expense?')">
+
+                                Delete
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+
+                    {% else %}
+
+                    <tr>
+
+                        <td colspan="5"
+                            class="empty-table">
+
+                            No transactions match your filters.
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+
+</body>
+
+</html>

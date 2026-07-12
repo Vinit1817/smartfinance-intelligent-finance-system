@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Add Expense</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 420px;
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 13px;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #111827;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Add Expense 💳</h1>
+
+    <form method="POST">
+
+        <label>Amount</label>
+
+        <input
+            type="number"
+            name="amount"
+            min="0.01"
+            step="0.01"
+            required
+        >
+
+        <label>Category</label>
+
+        <select name="category" required>
+            <option value="Food">Food</option>
+            <option value="Travel">Travel</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Bills">Bills</option>
+            <option value="Health">Health</option>
+            <option value="Education">Education</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label>Date</label>
+
+        <input
+            type="date"
+            name="date"
+            required
+        >
+
+        <label>Note</label>
+
+        <input
+            type="text"
+            name="note"
+            placeholder="Example: Pizza"
+        >
+
+        <button type="submit">
+            Save Expense
+        </button>
+
+    </form>
+
+    <a href="/dashboard">Back to Dashboard</a>
+
+</div>
+
+</body>
+
+</html>

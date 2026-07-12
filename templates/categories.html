@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Custom Categories | SmartFinance</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            Smart<span>Finance</span>
+        </div>
+
+        <div class="menu-title">OVERVIEW</div>
+
+        <a href="/dashboard">📊 Dashboard</a>
+        <a href="/notifications">🔔 Notifications</a>
+        <a href="/expenses">🔍 Search Expenses</a>
+
+        <div class="menu-title">FINANCE</div>
+
+        <a href="/income">💵 Monthly Income</a>
+        <a href="/budget">🎯 Monthly Budget</a>
+        <a href="/category-budgets">📂 Category Budgets</a>
+        <a href="/add-expense">💳 Add Expense</a>
+        <a href="/goals">🏆 Savings Goals</a>
+
+        <a href="/categories" class="active">
+            ✨ Custom Categories
+        </a>
+
+        <div class="menu-title">ACCOUNT</div>
+
+        <a href="/profile">👤 Profile & Settings</a>
+
+        {% if is_admin %}
+        <a href="/admin">🛡️ Admin Dashboard</a>
+        {% endif %}
+
+        <button type="button"
+                class="theme-toggle"
+                data-theme-toggle>
+            🌙 Dark Mode
+        </button>
+
+        <a href="/logout" class="logout">
+            🚪 Logout
+        </a>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="premium-page-header">
+
+            <div>
+
+                <span class="dashboard-label">
+                    FINANCIAL PERSONALIZATION
+                </span>
+
+                <h1>✨ Custom Categories</h1>
+
+                <p>
+                    Build personalized spending categories for your finances.
+                </p>
+
+            </div>
+
+            <a href="/dashboard"
+               class="action-btn">
+                ← Dashboard
+            </a>
+
+        </div>
+
+
+        <section class="category-manager-grid">
+
+            <div class="premium-form-card">
+
+                <div class="form-card-header">
+
+                    <div class="form-header-icon">
+                        ✨
+                    </div>
+
+                    <div>
+
+                        <span class="chart-small-label">
+                            CATEGORY CREATOR
+                        </span>
+
+                        <h2>Create Category</h2>
+
+                        <p>
+                            Add a new personalized expense category.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                {% if error %}
+
+                <div class="form-alert danger-text">
+                    ⚠️ {{ error }}
+                </div>
+
+                {% endif %}
+
+
+                {% if success %}
+
+                <div class="form-alert success-text">
+                    ✓ {{ success }}
+                </div>
+
+                {% endif %}
+
+
+                <form method="POST"
+                      class="premium-form">
+
+                    <div class="form-group">
+
+                        <label>Category Name</label>
+
+                        <input type="text"
+                               name="name"
+                               minlength="2"
+                               maxlength="40"
+                               placeholder="Example: Gym, Fuel, Gaming"
+                               required>
+
+                    </div>
+
+
+                    <button type="submit"
+                            class="premium-submit-btn">
+
+                        + Create Category
+
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <div class="form-intelligence-card">
+
+                <span class="chart-small-label">
+                    PERSONAL FINANCE ENGINE
+                </span>
+
+                <h2>Smarter Categorization</h2>
+
+                <p>
+                    Categories help SmartFinance understand your
+                    personal spending behaviour.
+                </p>
+
+
+                <div class="form-feature-list">
+
+                    <div class="form-feature-item">
+
+                        <span>📊</span>
+
+                        <div>
+
+                            <strong>Better Analytics</strong>
+
+                            <p>
+                                Custom categories appear in spending charts.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-feature-item">
+
+                        <span>🎯</span>
+
+                        <div>
+
+                            <strong>Budget Control</strong>
+
+                            <p>
+                                Create category-level monthly spending limits.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-feature-item">
+
+                        <span>🔔</span>
+
+                        <div>
+
+                            <strong>Smart Alerts</strong>
+
+                            <p>
+                                Receive warnings when category budgets are reached.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-feature-item">
+
+                        <span>🧠</span>
+
+                        <div>
+
+                            <strong>Spending Intelligence</strong>
+
+                            <p>
+                                SmartFinance identifies your highest spending areas.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="intelligence-footer">
+
+                    <span>CATEGORY ENGINE</span>
+
+                    <strong>ACTIVE</strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="category-library-panel">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        CATEGORY LIBRARY
+                    </span>
+
+                    <h2>Your Expense Categories</h2>
+
+                    <p>
+                        Manage categories available when recording expenses.
+                    </p>
+
+                </div>
+
+                <span class="category-count-badge">
+                    {{ categories|length }} Categories
+                </span>
+
+            </div>
+
+
+            <div class="category-library-grid">
+
+                {% for category in categories %}
+
+                <div class="category-library-card">
+
+                    <div class="category-library-icon">
+
+                        {% if category["name"]|lower == "food" %}
+                            🍕
+                        {% elif category["name"]|lower == "travel" %}
+                            🚗
+                        {% elif category["name"]|lower == "shopping" %}
+                            🛍️
+                        {% elif category["name"]|lower == "bills" %}
+                            🧾
+                        {% elif category["name"]|lower == "health" %}
+                            ❤️
+                        {% elif category["name"]|lower == "education" %}
+                            🎓
+                        {% elif category["name"]|lower == "entertainment" %}
+                            🎬
+                        {% else %}
+                            📂
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="category-library-info">
+
+                        <h3>
+                            {{ category["name"] }}
+                        </h3>
+
+                        <p>Expense category</p>
+
+                    </div>
+
+
+                    <form method="POST"
+                          action="/categories/{{ category['id'] }}/delete"
+                          onsubmit="return confirm('Delete this category?')">
+
+                        <button type="submit"
+                                class="category-delete-btn">
+
+                            Delete
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                {% else %}
+
+                <div class="notification-empty">
+
+                    <div class="empty-icon">
+                        📂
+                    </div>
+
+                    <h2>No categories available</h2>
+
+                    <p>
+                        Create your first expense category.
+                    </p>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+
+</body>
+
+</html>

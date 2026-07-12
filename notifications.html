@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Notifications | SmartFinance</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            Smart<span>Finance</span>
+        </div>
+
+        <div class="menu-title">OVERVIEW</div>
+
+        <a href="/dashboard">📊 Dashboard</a>
+
+        <a href="/notifications" class="active">
+            🔔 Notifications
+
+            {% if unread_count > 0 %}
+            <span class="notification-badge">
+                {{ unread_count }}
+            </span>
+            {% endif %}
+        </a>
+
+        <a href="/expenses">🔍 Search Expenses</a>
+
+        <div class="menu-title">FINANCE</div>
+
+        <a href="/income">💵 Monthly Income</a>
+        <a href="/budget">🎯 Monthly Budget</a>
+        <a href="/category-budgets">📂 Category Budgets</a>
+        <a href="/add-expense">💳 Add Expense</a>
+        <a href="/goals">🏆 Savings Goals</a>
+        <a href="/categories">✨ Custom Categories</a>
+
+        <div class="menu-title">ACCOUNT</div>
+
+        <a href="/profile">👤 Profile & Settings</a>
+
+        {% if is_admin %}
+        <a href="/admin">🛡️ Admin Dashboard</a>
+        {% endif %}
+
+        <button
+            type="button"
+            class="theme-toggle"
+            data-theme-toggle>
+            🌙 Dark / Light Mode
+        </button>
+
+        <a href="/logout" class="logout">
+            🚪 Logout
+        </a>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="notification-page-header">
+
+            <div>
+
+                <span class="dashboard-label">
+                    SMART ALERT CENTRE
+                </span>
+
+                <h1>
+                    Notification Center 🔔
+                </h1>
+
+                <p>
+                    SmartFinance automatically monitors your budgets
+                    and financial activity.
+                </p>
+
+            </div>
+
+
+            {% if unread_count > 0 %}
+
+            <form
+                method="POST"
+                action="/notifications/read-all">
+
+                <button
+                    class="action-btn primary"
+                    type="submit">
+
+                    ✓ Mark All as Read
+
+                </button>
+
+            </form>
+
+            {% endif %}
+
+        </div>
+
+
+        <section class="notification-summary">
+
+            <div class="notification-summary-card">
+
+                <span>UNREAD ALERTS</span>
+
+                <strong>
+                    {{ unread_count }}
+                </strong>
+
+                <p>
+                    Financial alerts requiring attention
+                </p>
+
+            </div>
+
+
+            <div class="notification-summary-card">
+
+                <span>SMART MONITORING</span>
+
+                <strong>ACTIVE</strong>
+
+                <p>
+                    Automatic budget monitoring enabled
+                </p>
+
+            </div>
+
+
+            <div class="notification-summary-card">
+
+                <span>ALERT SYSTEM</span>
+
+                <strong>LIVE</strong>
+
+                <p>
+                    Expense and savings events monitored
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <section class="notification-panel">
+
+            <div class="notification-panel-header">
+
+                <div>
+
+                    <span class="chart-small-label">
+                        ACTIVITY FEED
+                    </span>
+
+                    <h2>
+                        Financial Notifications
+                    </h2>
+
+                    <p>
+                        Latest SmartFinance alerts and financial signals.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="notification-list">
+
+                {% for notification in notifications %}
+
+                <div class="
+                    notification-item
+                    notification-{{ notification['notification_type'] }}
+                    {% if notification['is_read'] == 0 %}
+                    notification-unread
+                    {% endif %}
+                ">
+
+                    <div class="notification-icon">
+
+                        {% if notification["notification_type"] == "danger" %}
+
+                        🚨
+
+                        {% elif notification["notification_type"] == "warning" %}
+
+                        ⚠️
+
+                        {% elif notification["notification_type"] == "success" %}
+
+                        ✅
+
+                        {% else %}
+
+                        💡
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="notification-content">
+
+                        <div class="notification-title-row">
+
+                            <h3>
+                                {{ notification["title"] }}
+                            </h3>
+
+                            {% if notification["is_read"] == 0 %}
+
+                            <span class="unread-pill">
+                                NEW
+                            </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <p>
+                            {{ notification["message"] }}
+                        </p>
+
+
+                        <span class="notification-time">
+                            {{ notification["created_at"] }}
+                        </span>
+
+                    </div>
+
+
+                    {% if notification["is_read"] == 0 %}
+
+                    <form
+                        method="POST"
+                        action="/notifications/{{ notification['id'] }}/read">
+
+                        <button
+                            type="submit"
+                            class="notification-read-btn">
+
+                            Mark Read
+
+                        </button>
+
+                    </form>
+
+                    {% endif %}
+
+                </div>
+
+
+                {% else %}
+
+                <div class="notification-empty">
+
+                    <div class="empty-icon">
+                        🔔
+                    </div>
+
+                    <h2>
+                        You're all caught up
+                    </h2>
+
+                    <p>
+                        No financial notifications are available.
+                    </p>
+
+                    <a
+                        href="/dashboard"
+                        class="action-btn primary">
+
+                        Return to Dashboard
+
+                    </a>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+
+</body>
+
+</html>
