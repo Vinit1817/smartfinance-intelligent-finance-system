@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, Response, send_file
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import re
 import math
 import calendar
@@ -15,7 +16,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = "smart-finance-secret-key"
 
-DATABASE = "database.db"
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
@@ -35,377 +36,201 @@ DEFAULT_CATEGORIES = [
 ]
 
 
+class DatabaseConnection:
+    def __init__(self):
+        if not DATABASE_URL:
+            raise RuntimeError("DATABASE_URL environment variable is not configured.")
+        self.conn = psycopg2.connect(DATABASE_URL)
+        self.cursor = self.conn.cursor(cursor_factory=RealDictCursor)
+
+    @staticmethod
+    def _sql(query):
+        return query.replace("?", "%s").replace(
+            "INSERT OR IGNORE INTO", "INSERT INTO"
+        )
+
+    def execute(self, query, params=()):
+        sql = self._sql(query)
+        if "INSERT INTO categories" in sql and "ON CONFLICT" not in sql:
+            sql += " ON CONFLICT (user_id, name) DO NOTHING"
+        self.cursor.execute(sql, params)
+        return self.cursor
+
+    def commit(self):
+        self.conn.commit()
+
+    def rollback(self):
+        self.conn.rollback()
+
+    def close(self):
+        self.cursor.close()
+        self.conn.close()
+
+
 def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    return DatabaseConnection()
 
 
 def init_db():
     conn = get_db()
 
-    conn.execute("""
+    statements = [
+        """
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            email TEXT,
+            is_admin INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            theme TEXT DEFAULT 'light',
+            role TEXT DEFAULT 'user'
         )
-    """)
-
-    conn.execute("""
+        """,
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower
+        ON users (LOWER(email))
+        WHERE email IS NOT NULL
+        """,
+        """
         CREATE TABLE IF NOT EXISTS monthly_income (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             month TEXT NOT NULL,
-            amount REAL NOT NULL,
+            amount DOUBLE PRECISION NOT NULL,
             UNIQUE(user_id, month)
         )
-    """)
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS monthly_budgets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             month TEXT NOT NULL,
-            amount REAL NOT NULL,
+            amount DOUBLE PRECISION NOT NULL,
             UNIQUE(user_id, month)
         )
-    """)
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
-            amount REAL NOT NULL,
+            amount DOUBLE PRECISION NOT NULL,
             category TEXT NOT NULL,
             date TEXT NOT NULL,
             note TEXT
         )
-    """)
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS categories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             name TEXT NOT NULL,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id, name)
         )
-    """)
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS category_budgets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             month TEXT NOT NULL,
             category TEXT NOT NULL,
-            amount REAL NOT NULL,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            amount DOUBLE PRECISION NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id, month, category)
         )
-    """)
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS savings_goals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             title TEXT NOT NULL,
-            target_amount REAL NOT NULL,
-            saved_amount REAL DEFAULT 0,
+            target_amount DOUBLE PRECISION NOT NULL,
+            saved_amount DOUBLE PRECISION DEFAULT 0,
             deadline TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS goal_contributions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             goal_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
-            amount REAL NOT NULL,
+            amount DOUBLE PRECISION NOT NULL,
             contribution_date TEXT NOT NULL,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             title TEXT NOT NULL,
             message TEXT NOT NULL,
             notification_type TEXT DEFAULT 'info',
             is_read INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
-
-    recurring_columns = {
-        row[1]
-        for row in conn.execute(
-            "PRAGMA table_info(recurring_expenses)"
-        ).fetchall()
-    }
-
-    expected_recurring = {
-        "id", "user_id", "title", "amount", "category",
-        "day_of_month", "start_date", "is_active", "created_at"
-    }
-
-    if recurring_columns and (
-        not expected_recurring.issubset(recurring_columns)
-        or "frequency" in recurring_columns
-    ):
-        conn.execute(
-            "ALTER TABLE recurring_expenses "
-            "RENAME TO recurring_expenses_legacy"
-        )
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS recurring_expenses (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             title TEXT NOT NULL,
-            amount REAL NOT NULL,
+            amount DOUBLE PRECISION NOT NULL,
             category TEXT NOT NULL,
             day_of_month INTEGER NOT NULL,
             start_date TEXT NOT NULL,
             is_active INTEGER DEFAULT 1,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
-
-    legacy_recurring = conn.execute("""
-        SELECT name FROM sqlite_master
-        WHERE type = 'table'
-        AND name = 'recurring_expenses_legacy'
-    """).fetchone()
-
-    if legacy_recurring:
-        legacy_columns = {
-            row[1]
-            for row in conn.execute(
-                "PRAGMA table_info(recurring_expenses_legacy)"
-            ).fetchall()
-        }
-
-        rows = conn.execute(
-            "SELECT * FROM recurring_expenses_legacy"
-        ).fetchall()
-
-        for row in rows:
-            data = dict(row)
-            title = (
-                data.get("title")
-                or data.get("name")
-                or "Recurring Expense"
-            )
-            amount = float(data.get("amount") or 0)
-            category = data.get("category") or "Other"
-            day_value = (
-                data.get("day_of_month")
-                or data.get("billing_day")
-                or 1
-            )
-
-            try:
-                day_value = max(1, min(31, int(day_value)))
-            except (TypeError, ValueError):
-                day_value = 1
-
-            start_value = (
-                data.get("start_date")
-                or data.get("next_due_date")
-                or date.today().isoformat()
-            )
-
-            is_active = data.get("is_active")
-            if is_active is None:
-                is_active = 1
-
-            user_id = data.get("user_id")
-
-            if user_id is not None and amount > 0:
-                conn.execute("""
-                    INSERT INTO recurring_expenses
-                    (
-                        user_id, title, amount, category,
-                        day_of_month, start_date, is_active
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    user_id,
-                    title,
-                    amount,
-                    category,
-                    day_value,
-                    str(start_value)[:10],
-                    is_active
-                ))
-
-        conn.execute(
-            "DROP TABLE recurring_expenses_legacy"
-        )
-
-    run_columns = {
-        row[1]
-        for row in conn.execute(
-            "PRAGMA table_info(recurring_expense_runs)"
-        ).fetchall()
-    }
-
-    expected_runs = {
-        "id", "recurring_expense_id", "user_id",
-        "month", "transaction_id", "created_at"
-    }
-
-    if run_columns and not expected_runs.issubset(run_columns):
-        conn.execute("DROP TABLE recurring_expense_runs")
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS recurring_expense_runs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             recurring_expense_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
             month TEXT NOT NULL,
             transaction_id INTEGER,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(recurring_expense_id, month)
         )
-    """)
-
-    bill_columns = {
-        row[1]
-        for row in conn.execute(
-            "PRAGMA table_info(bill_reminders)"
-        ).fetchall()
-    }
-
-    expected_bills = {
-        "id", "user_id", "title", "amount", "due_date",
-        "category", "remind_days_before", "is_paid", "created_at"
-    }
-
-    if bill_columns and not expected_bills.issubset(bill_columns):
-        conn.execute(
-            "ALTER TABLE bill_reminders "
-            "RENAME TO bill_reminders_legacy"
-        )
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS bill_reminders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             title TEXT NOT NULL,
-            amount REAL NOT NULL,
+            amount DOUBLE PRECISION NOT NULL,
             due_date TEXT NOT NULL,
             category TEXT DEFAULT 'Bills',
             remind_days_before INTEGER DEFAULT 3,
             is_paid INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
-
-    legacy_bills = conn.execute("""
-        SELECT name FROM sqlite_master
-        WHERE type = 'table'
-        AND name = 'bill_reminders_legacy'
-    """).fetchone()
-
-    if legacy_bills:
-        rows = conn.execute(
-            "SELECT * FROM bill_reminders_legacy"
-        ).fetchall()
-
-        for row in rows:
-            data = dict(row)
-            user_id = data.get("user_id")
-            title = data.get("title") or data.get("name") or "Bill"
-            amount = float(data.get("amount") or 0)
-            due_date = (
-                data.get("due_date")
-                or date.today().isoformat()
-            )
-            category = data.get("category") or "Bills"
-            remind_days = data.get("remind_days_before")
-            if remind_days is None:
-                remind_days = 3
-            is_paid = data.get("is_paid")
-            if is_paid is None:
-                is_paid = 0
-
-            if user_id is not None and amount > 0:
-                conn.execute("""
-                    INSERT INTO bill_reminders
-                    (
-                        user_id, title, amount, due_date,
-                        category, remind_days_before, is_paid
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    user_id,
-                    title,
-                    amount,
-                    str(due_date)[:10],
-                    category,
-                    remind_days,
-                    is_paid
-                ))
-
-        conn.execute("DROP TABLE bill_reminders_legacy")
-
-    conn.execute("""
+        """,
+        """
         CREATE TABLE IF NOT EXISTS password_reset_otps (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             otp TEXT NOT NULL,
             expires_at TEXT NOT NULL,
             is_used INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
-
-    conn.execute("""
+        """,
+        """
         CREATE INDEX IF NOT EXISTS idx_notifications_user
         ON notifications(user_id)
-    """)
-
-    conn.execute("""
+        """,
+        """
         CREATE INDEX IF NOT EXISTS idx_notifications_read
         ON notifications(user_id, is_read)
-    """)
+        """
+    ]
 
-    user_columns = {
-        row["name"]
-        for row in conn.execute("PRAGMA table_info(users)").fetchall()
-    }
-
-    if "email" not in user_columns:
-        conn.execute("ALTER TABLE users ADD COLUMN email TEXT")
-
-    if "is_admin" not in user_columns:
-        conn.execute(
-            "ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0"
-        )
-
-    if "created_at" not in user_columns:
-        conn.execute("ALTER TABLE users ADD COLUMN created_at TEXT")
-        conn.execute("""
-            UPDATE users
-            SET created_at = CURRENT_TIMESTAMP
-            WHERE created_at IS NULL
-        """)
-
-    if "theme" not in user_columns:
-        conn.execute(
-            "ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'light'"
-        )
-
-    if "role" not in user_columns:
-        conn.execute(
-            "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"
-        )
+    for statement in statements:
+        conn.execute(statement)
 
     conn.commit()
     conn.close()
@@ -566,6 +391,7 @@ def process_recurring_expenses(conn, user_id, target_month=None):
             INSERT INTO transactions
             (user_id, amount, category, date, note)
             VALUES (?, ?, ?, ?, ?)
+            RETURNING id
         """, (
             user_id,
             row["amount"],
@@ -573,13 +399,14 @@ def process_recurring_expenses(conn, user_id, target_month=None):
             expense_date,
             f'Recurring: {row["title"]}'
         ))
+        transaction_id = cursor.fetchone()["id"]
 
         conn.execute("""
             INSERT INTO recurring_expense_runs
             (recurring_expense_id, user_id, month, transaction_id)
             VALUES (?, ?, ?, ?)
         """, (
-            row["id"], user_id, target_month, cursor.lastrowid
+            row["id"], user_id, target_month, transaction_id
         ))
 
         create_notification(
@@ -814,8 +641,9 @@ def register():
                 cursor = conn.execute("""
                     INSERT INTO users (name, email, password)
                     VALUES (?, ?, ?)
+                    RETURNING id
                 """, (name, email, generate_password_hash(password)))
-                user_id = cursor.lastrowid
+                user_id = cursor.fetchone()["id"]
                 conn.commit()
                 conn.close()
                 add_default_categories(user_id)
@@ -906,8 +734,9 @@ def forgot_password():
                     INSERT INTO password_reset_otps
                     (user_id, otp, expires_at)
                     VALUES (?, ?, ?)
+                    RETURNING id
                 """, (user["id"], otp, expires_at))
-                otp_id = cursor.lastrowid
+                otp_id = cursor.fetchone()["id"]
                 conn.commit()
 
                 try:

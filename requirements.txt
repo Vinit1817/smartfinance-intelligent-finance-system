@@ -1,5 +1,0 @@
-Flask
-Werkzeug
-python-dotenv
-reportlab
-gunicorn
